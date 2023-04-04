@@ -1,56 +1,47 @@
 from konlpy.tag import Okt
-from konlpy.utils import pprint
 import numpy as np
 
 
-#text = open('vocab/Merged.txt', encoding="utf8")
-#text = text.read()
+text = open('Merged.txt', encoding="utf8")
+text = text.read()
 okt = Okt()
 
-
-text = "이명함은디자인이인상적이서좋다."
-text2 = '이명함은디자인에더신경을써야한다.'
+#text = "이명함은 디자인이인 상적이서좋다."
+text = text.strip().replace(' ','')
 
 trans = np.array(okt.pos(text, norm=True, stem=True, join=False))
-uTrans = np.unique(trans, axis=0)
-
-trans2 = np.array(okt.pos(text, norm=True, stem=True, join=False))
-uTrans2 = np.unique(trans2, axis=0)
-
-0
-rows = np.where(uTrans[:,1] == 'Noun')
-Nouns = uTrans[rows]
-
-rows2 = np.where(uTrans[:,1] == 'Verb')
-Verbs = uTrans[rows2]
-
-rows3 = np.where(uTrans[:,1] == 'Adjective')
-Adjective = uTrans[rows3]
-
-rows4 = np.where(uTrans[:,1] == 'Adverb')
-Adverb = uTrans[rows4]
-
-#second text
-
-Nrows = np.where(uTrans2[:,1] == 'Noun')
-nNouns = uTrans2[Nrows]
-
-nrows2 = np.where(uTrans2[:,1] == 'Verb')
-nVerbs = uTrans2[nrows2]
-
-nrows3 = np.where(uTrans2[:,1] == 'Adjective')
-nAdjective = uTrans2[nrows3]
-
-nrows4 = np.where(uTrans2[:,1] == 'Adverb')
-nAdverb = uTrans2[nrows4]
+trans = np.unique(trans, axis=0)
 
 
-if np.all(nNouns) == np.all(Nouns):
-  np.delete(nNouns)
+#only using words in compareSpeech list
+compareSpeech = ['Noun', 'Verb', 'Adjective', 'Adverb']
+wordList = []
+
+for speech in compareSpeech:
+  for compare in trans:
+    if speech == compare[1]:
+      wordList.append(compare[0])
 
 
-print(Nouns)
-print('---')
-print(nNouns)
+#Connecting to SQL database
+import pyodbc
+server = "LAPTOP-N520711M\SQLEXPRESS"
+database = "KoreanDict"
+cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server}; \
+                        SERVER=' + server + '; \
+                        DATABASE=' + database +';\
+                        Trusted_Connection=yes;')
 
+cursor = cnxn.cursor()
 
+#function that translates words
+
+def translate(pos):
+  for i in pos:
+    cursor.execute("SELECT KDPT1.Entry, KDPT1.English, KDPT1.English Meaning FROM KDPT1 WHERE KDPT1.Entry LIKE (?) \
+          UNION ALL \
+            SELECT KDPT2.Entry, KDPT2.English, KDPT2.English Meaning FROM KDPT2 WHERE KDPT2.Entry LIKE (?)", (i, i))     
+    for row in cursor:
+      print(row)
+      
+translate(wordList)    
