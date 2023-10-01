@@ -29,9 +29,9 @@ wordList = [word for word, speech in trans if speech in english_speech_categorie
 
 # Connecting to SQL database
 import pyodbc
-server = "LAPTOP-N520711M\SQLEXPRESS"
+server = ""
 database = "KoreanDict"
-cnxn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server}; '
+cnxn = pyodbc.connect('DRIVER={ for SQL Server}; '
                       'SERVER=' + server + '; '
                       'DATABASE=' + database + '; '
                       'Trusted_Connection=yes;')
